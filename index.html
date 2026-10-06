@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rift Roll · Randomizer de composiciones</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22lgG%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f0e6d2%22/%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23c8aa6e%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23785a28%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id%3D%22lgR%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23c8aa6e%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%235b4520%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d%3D%22M84%2026%20A40%2040%200%201%201%2030%2018%22%20fill%3D%22none%22%20stroke%3D%22url%28%23lgR%29%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22butt%22/%3E%3Cpath%20d%3D%22M16%2010%20H72%20L84%2022%20V46%20L72%2058%20H60%20V70%20H40%20V50%20L48%2042%20H62%20V30%20H40%20V40%20H24%20V20%20L16%2014%20Z%22%20fill%3D%22url%28%23lgG%29%22%20stroke%3D%22%23060d1a%22%20stroke-width%3D%223%22%20paint-order%3D%22stroke%22%20stroke-linejoin%3D%22miter%22/%3E%3Cpath%20d%3D%22M50%2074%20L60%2084%20L50%2094%20L40%2084%20Z%22%20fill%3D%22url%28%23lgG%29%22%20stroke%3D%22%23060d1a%22%20stroke-width%3D%223%22%20paint-order%3D%22stroke%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -38,6 +39,7 @@ h1{
   filter:drop-shadow(0 2px 10px rgba(200,170,110,.25));
 }
 header p{color:var(--muted);margin-top:8px;font-size:.98rem}
+.logo{display:block;width:clamp(64px,10vw,88px);height:auto;margin:0 auto 10px;filter:drop-shadow(0 2px 12px rgba(200,170,110,.3))}
 
 /* ---------- Layout ---------- */
 main{max-width:1180px;margin:0 auto;padding:16px}
@@ -315,6 +317,18 @@ table.aff td{padding:8px;border-bottom:1px solid var(--line);vertical-align:midd
 .st.mine{fill:#0ac8b9}.st.enemy{fill:#e84057}
 .st.inhib{stroke:#f0e6d2;stroke-width:1}
 .st.down{fill:#3a3f4a;opacity:.55}
+.wave{stroke:#08121f;stroke-width:1}.wave.mine{fill:#7fe9df}.wave.enemy{fill:#ff8a9b}.wave.even{fill:#c8aa6e}
+.pit{font:600 9px var(--body);fill:#8b98a8;letter-spacing:.04em}
+.tok .halo{fill:none;stroke:#f0e6d2;stroke-width:2.5;opacity:0}
+.tok.focus .halo{opacity:1;animation:haloA 1.1s ease-in-out infinite alternate}
+@keyframes haloA{from{stroke-opacity:1}to{stroke-opacity:.25}}
+#focus{pointer-events:none}
+.fring{fill:rgba(240,230,210,.07);stroke:#f0e6d2;stroke-width:1.5;stroke-dasharray:4 3}
+.fmark.enemy .fring{stroke:#ff8a9b;fill:rgba(232,64,87,.1)}
+.fmark.mine .fring{stroke:#7fe9df;fill:rgba(10,200,185,.08)}
+.fmark text{font:700 11px var(--body);fill:#f0e6d2;paint-order:stroke;stroke:#060d1a;stroke-width:3.5px;stroke-linejoin:round}
+.farrow{stroke:#f0e6d2;stroke-width:2;stroke-dasharray:5 4;opacity:.85}
+@media (prefers-reduced-motion:reduce){.tok.focus .halo{animation:none}}
 .hud{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
 .clock{font-family:var(--display);font-weight:800;font-size:1.9rem;color:var(--gold-hi);font-variant-numeric:tabular-nums}
 .hud-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
@@ -339,6 +353,7 @@ table.aff td{padding:8px;border-bottom:1px solid var(--line);vertical-align:midd
 </head>
 <body>
 <header>
+  <svg class="logo" viewBox="0 0 100 100" role="img" aria-label="Rift Roll"><defs><linearGradient id="lgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0e6d2"/><stop offset=".45" stop-color="#c8aa6e"/><stop offset="1" stop-color="#785a28"/></linearGradient><linearGradient id="lgR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8aa6e"/><stop offset="1" stop-color="#5b4520"/></linearGradient></defs><path d="M84 26 A40 40 0 1 1 30 18" fill="none" stroke="url(#lgR)" stroke-width="7" stroke-linecap="butt"/><path d="M16 10 H72 L84 22 V46 L72 58 H60 V70 H40 V50 L48 42 H62 V30 H40 V40 H24 V20 L16 14 Z" fill="url(#lgG)" stroke="#060d1a" stroke-width="3" paint-order="stroke" stroke-linejoin="miter"/><path d="M50 74 L60 84 L50 94 L40 84 Z" fill="url(#lgG)" stroke="#060d1a" stroke-width="3" paint-order="stroke"/></svg>
   <h1>Rift Roll</h1>
   <p>Rolleá las cinco líneas, fijá tu equipo y mirá si la comp aguanta una partida.</p>
   <nav class="tabs" role="tablist">
@@ -1437,7 +1452,9 @@ function aftermath(side,hits){
   if(!gains.length) return "";
   return gains.length===1?gains[0]:gains.slice(0,-1).join(", ")+" y "+gains[gains.length-1];
 }
-const clashPt=L=>along(PATHS[L],.5+.3*sim.match.lanes[L].p);
+// Dónde está la oleada en cada línea (0 = tu base, 1 = base rival). Con p=±.15 ya queda a la altura de la torre exterior.
+const frontF=p=>.5+.32*Math.sign(p)*Math.sqrt(Math.abs(p));
+const clashPt=L=>along(PATHS[L],frontF(sim.match.lanes[L].p));
 function along(path,f){
   const seg=[]; let L=0;
   for(let i=1;i<path.length;i++){ const d=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]); seg.push(d); L+=d; }
@@ -1476,6 +1493,8 @@ const EVENTS=[
     const L=rnd(["top","bot"].filter(l=>aliveIn("enemy",l).length));
     const lp=M.lanes[L].p, eh=laneHp("enemy",L), mid=champ("mine",2), fm=form("mine",2), emid=champ("enemy",2);
     return {title:"Ventana de rotación",
+      show:()=>{ stageLane("mid"); stageLane(L); hl("mine",2); LANES[L].forEach(i=>alive("enemy",i)&&hl("enemy",i));
+        mark(clashPt("mid"),"Mid empujada","mine"); mark(clashPt(L),`${L}: ${laneLabel(lp)}`); arrow(posOf("mine",2),clashPt(L)); },
       ctx:`${mid.name} (${kd("mine",2)}) tiene la oleada de mid empujada. En ${L} tu línea va ${laneTxt(lp)} y el rival está ${hpTxt(eh)}.`,
       opts:[
       {label:`Rotar a ${L}`,desc:`${mid.name} deja mid y cae por el río.`,
@@ -1499,6 +1518,8 @@ const EVENTS=[
     const L=Math.random()<.6?c[0]:rnd(c), lp=M.lanes[L].p, eh=laneHp("enemy",L), jg=champ("mine",1), ejg=champ("enemy",1);
     const allyCC=LANES[L].reduce((a,i)=>a+champ("mine",i).cc,0);
     return {title:"Oportunidad de gank",
+      show:()=>{ stageLane(L); const j=jgNear(L); if(alive("mine",1)) moveTo("mine",1,j); hl("mine",1); LANES[L].forEach(i=>alive("enemy",i)&&hl("enemy",i));
+        mark(clashPt(L),lp<-.15?"Rival sobreextendido":lp>.15?"Rival bajo su torre":"Oleada en el medio","enemy"); arrow(j,clashPt(L)); },
       ctx:`${jg.name} (${kd("mine",1)}) está cerca de ${L}. El rival ${lp<-.15?"está sobreextendido empujando":lp>.15?"juega atrás, pegado a su torre":"tiene la oleada en el medio"} y está ${hpTxt(eh)}.`,
       opts:[
       {label:`Gankear ${L}`,desc:"Entrar por el costado y forzar la pelea.",
@@ -1521,6 +1542,7 @@ const EVENTS=[
     const ccD=sim.my.reduce((a,c)=>a+c.cc,0)-sim.enemy.team.reduce((a,c)=>a+c.cc,0);
     const elder=soulTaken(), soon=!M.dr.mine&&!M.dr.enemy?"":M.dr.mine===3&&M.dr.enemy===3?" Los dos equipos están a un dragón del Alma.":M.dr.mine===3?" Si lo hacen, se llevan el Alma.":M.dr.enemy===3?" Si el rival lo hace, se lleva el Alma.":"";
     return {title:elder?"Se viene el Dragón Ancestral":"Se viene el dragón",
+      show:()=>{ stageLane("bot"); stageLane("mid"); mark([280,280],elder?"Ancestral en 1:00":"Dragón en 1:00"); },
       ctx:elder?`El Dragón Ancestral sale en un minuto: quien lo haga ejecuta a los rivales con poca vida y gana casi cualquier pelea. Alma para ${M.soul==="mine"?"tu equipo":"el rival"}${ad>0?"; el rival tiene gente muerta":ad<0?"; a tu equipo le faltan aliados vivos":""}.`
         :`El dragón sale en un minuto. Botlane ${laneTxt(pb)}, mid ${laneTxt(pm)}. Dragones ${M.dr.mine} a ${M.dr.enemy}.${soon}${ad>0?" El rival tiene gente muerta.":ad<0?" A tu equipo le faltan aliados vivos.":""}`,
       opts:[
@@ -1541,6 +1563,7 @@ const EVENTS=[
   make:M=>{
     const me=tstats(M.team,true), en=tstats(sim.enemy.team,false), am=aliveCount("mine"), ae=aliveCount("enemy");
     return {title:"El rival se agrupa",
+      show:()=>{ groupTo("enemy",[222,178]); [0,1,2,3,4].forEach(i=>alive("enemy",i)&&hl("enemy",i)); mark([222,178],"Rival agrupado en mid","enemy"); },
       ctx:`El rival se junta en mid buscando pelea. Oro ${goldTxt()}, vivos ${am} contra ${ae}.`,
       opts:[
       {label:"Aceptar la pelea",desc:"Los cinco al centro a pelear de frente.",
@@ -1565,6 +1588,7 @@ const EVENTS=[
     const best=["top","mid","bot"].sort((a,b)=>M.lanes[b].p-M.lanes[a].p)[0];
     M.baronT=M.t+6;
     return {title:"Barón libre",
+      show:()=>{ mark([120,120],"Barón disponible"); mark(clashPt(best),`Push en ${best}`,"mine"); },
       ctx:`El Barón está disponible. ${rw?"Tu equipo acaba de ganar una pelea.":rl?"Vienen de perder una pelea.":"Hace rato que nadie gana una pelea."} Oro ${goldTxt()}, vivos ${am} contra ${ae}.`,
       opts:[
       {label:"Hacer Barón",desc:"Tirarlo rápido antes de que lleguen.",
@@ -1586,11 +1610,19 @@ const EVENTS=[
     const near=alive("enemy",4)&&Math.random()<.55;
     const peel=near?(has(sup,"P")||has(sup,"H")?.7:0)+sup.tank*.2:0;
     return {title:"Carry rival a la vista",
+      show:()=>{
+        const f=M.lanes.bot.p<0?.42:.74, adcPt=along(PATHS.bot,f);
+        moveTo("enemy",3,adcPt);
+        if(alive("enemy",4)) moveTo("enemy",4,near?[adcPt[0]+14,adcPt[1]+12]:[255,105]);
+        hl("enemy",3); hl("mine",ai);
+        mark(adcPt,M.lanes.bot.p<0?`${adc.name} adelantado`:`${adc.name} junto a su torre`,"enemy");
+        if(!near&&alive("enemy",4)) mark([255,105],`${sup.name} wardeando`);
+        arrow(posOf("mine",ai),adcPt); },
       ctx:`${adc.name} (${kd("enemy",3)}) farmea ${M.lanes.bot.p<0?"adelantado en bot":"cerca de su torre"} y está ${hpTxt(M.ch.enemy[3].hp)}. ${near?`${sup.name} está a su lado.`:`${sup.name} se fue a wardear lejos.`} ${a.name} va ${kd("mine",ai)}.`,
       opts:[
       {label:`${a.name} va solo por ${adc.name}`,desc:"Entrar, borrar al carry y salir.",
        p:sig(-.2+form("mine",ai)*.8+(phaseVal(a,M.t)-2)*.4-peel-form("enemy",3)*.3+(1-M.ch.enemy[3].hp)*.8),
-       at:()=>{ const pt=clashPt("bot"); moveTo("mine",ai,[pt[0]+12,pt[1]-12]); return pt; },
+       at:()=>{ const pt=posOf("enemy",3); moveTo("mine",ai,[pt[0]+12,pt[1]-12]); return pt; },
        ok:()=>{ kill("mine",3,ai); if(!near&&Math.random()<.3) kill("mine",4,ai); return `${a.name} encuentra a ${adc.name} y lo borra antes de que reaccione.`; },
        fail:()=>{ kill("enemy",ai); return `${a.name} entra pero ${near?sup.name+" lo frena":adc.name+" sobrevive"} y termina muerto.`; }},
       {label:"Esperar con el equipo",desc:"Guardar al asesino para la próxima pelea.",
@@ -1606,6 +1638,7 @@ const EVENTS=[
     const L=["top","bot"].sort((a,b)=>M.lanes[b].p-M.lanes[a].p)[0];
     const en=tstats(sim.enemy.team,false);
     return {title:"Presión lateral",
+      show:()=>{ stageLane(L); const t=along(PATHS[L],.8); hl("mine",si); mark(t,`Split en ${L}`,"mine"); arrow(posOf("mine",si),t); },
       ctx:`${s.name} (${kd("mine",si)}) puede irse a ${L}, que está ${laneTxt(M.lanes[L].p)}. El rival ${en.G?"tiene ultis globales para responder":"no tiene cómo llegar rápido"}.`,
       opts:[
       {label:`${s.name} hace split en ${L}`,desc:"Uno presiona el lateral y el resto aguanta en mid.",
@@ -1624,6 +1657,8 @@ const EVENTS=[
   make:M=>{
     const si=M.team.findIndex((c,i)=>(has(c,"S")||has(c,"G"))&&alive("mine",i)), s=champ("mine",si), down=sum(M.tw.enemy);
     return {title:"Base expuesta",
+      show:()=>{ const far=along(PATHS.bot,.3); groupTo("enemy",far); mark(far,"Rival ocupado","enemy");
+        hl("mine",si); mark([352,48],"Nexo rival"); arrow(posOf("mine",si),[352,48]); },
       ctx:`El rival está ocupado del otro lado del mapa. Tiene un inhibidor caído, le quedan ${M.nexusT.enemy} torres del nexo y ${s.name} (${kd("mine",si)}) está libre.`,
       opts:[
       {label:`Backdoor con ${s.name}`,desc:"Ir directo al nexo mientras nadie mira.",
@@ -1644,6 +1679,7 @@ const EVENTS=[
     const me=tstats(M.team,true), apShare=me.ap/(me.ad+me.ap||1), to=apShare<.5?"AP":"AD";
     const t2=M.team.slice(); t2[i]={...c,dmg:to}; const delta=analyze(t2).score-analyze(M.team).score;
     return {title:"Ajuste de build",
+      show:()=>{ hl("mine",i); mark(posOf("mine",i),`${c.name}: ¿cambiar build?`,"mine"); },
       ctx:`Tu equipo pega ${Math.round((1-apShare)*100)}% físico y el rival empezó a comprar ${apShare<.5?"armadura":"resistencia mágica"}. ${c.name} (${kd("mine",i)}) puede cambiar de build.`,
       opts:[
       {label:`Pasar a ${c.name} a full ${to}`,desc:"Vender y rearmar con el otro tipo de daño.",
@@ -1668,6 +1704,8 @@ const EVENTS=[
     [0,1,2,3,4].filter(j=>j!==xi).forEach(j=>{ const t=M.team.slice(); [t[xi],t[j]]=[t[j],t[xi]]; const d=analyze(t).score-M.myScore; if(!best||d>best.d) best={j,d}; });
     const y=champ("mine",best.j);
     return {title:"Línea complicada",
+      show:()=>{ stageLane(L); hl("mine",xi); hl("mine",best.j); mark(clashPt(L),`${L}: ${laneLabel(M.lanes[L].p)}`,"enemy");
+        if(alive("mine",1)) arrow(posOf("mine",1),clashPt(L)); },
       ctx:`${x.name} va ${kd("mine",xi)} en ${L} y la línea está ${laneTxt(M.lanes[L].p)}.`,
       opts:[
       {label:`Cambiar de línea con ${y.name}`,desc:"Intercambiar posiciones para buscar otro enfrentamiento.",
@@ -1687,6 +1725,9 @@ const EVENTS=[
     const L=["top","mid","bot"].sort((a,b)=>M.tw.mine[b]-M.tw.mine[a])[0];
     const me=tstats(M.team,true), en=tstats(sim.enemy.team,false), eb=M.baron&&M.baron.side==="enemy"&&M.baron.until>=M.t;
     return {title:"Asedio a tu base",
+      show:()=>{ const sp=onLane("mine",L,Math.max(.14,TOWER_F[Math.min(M.tw.mine[L],2)]+.04)); groupTo("enemy",sp);
+        LANES[L].forEach((i,k)=>{ if(alive("mine",i)) moveTo("mine",i,onLane("mine",L,Math.max(.09,TOWER_F[Math.min(M.tw.mine[L],2)]-.03)+k*.02)); });
+        [0,1,2,3,4].forEach(i=>alive("enemy",i)&&hl("enemy",i)); mark(sp,`Asedio en ${L}${eb?" (Barón)":""}`,"enemy"); },
       ctx:`El rival asedia ${L}${eb?" con el buff de Barón":""}. Perdiste ${sum(M.tw.mine)} torres; vivos ${aliveCount("mine")} contra ${aliveCount("enemy")}.`,
       opts:[
       {label:"Defender bajo torre",desc:"Aguantar con las torres y castigar al que entre.",
@@ -1707,6 +1748,7 @@ const EVENTS=[
     const xi=[0,1,2,3,4].filter(i=>!M.ch.enemy[i].dead).sort((a,b)=>(M.ch.enemy[b].k-M.ch.enemy[b].d)-(M.ch.enemy[a].k-M.ch.enemy[a].d))[0];
     const x=champ("enemy",xi), me=tstats(M.team,true), en=tstats(sim.enemy.team,false);
     return {title:"Rival desatado",
+      show:()=>{ hl("enemy",xi); mark(posOf("enemy",xi),`${x.name} ${kd("enemy",xi)}`,"enemy"); },
       ctx:`${x.name} rival va ${kd("enemy",xi)} y está decidiendo las peleas.`,
       opts:[
       {label:`Focalizar a ${x.name}`,desc:"Todo el control y el daño a un solo objetivo.",
@@ -1725,7 +1767,8 @@ const EVENTS=[
 
 /* ---------- Mapa ---------- */
 function mapBaseSVG(){
-  return `<defs><linearGradient id="grass2" x1="0" y1="1" x2="1" y2="0">
+  return `<defs><marker id="arrowhead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#f0e6d2"/></marker>
+    <linearGradient id="grass2" x1="0" y1="1" x2="1" y2="0">
       <stop offset="0" stop-color="#10291f"/><stop offset="1" stop-color="#1a1f2e"/></linearGradient></defs>
     <rect width="400" height="400" fill="url(#grass2)"/>
     <path d="M0 40 L40 0 L400 360 L360 400 Z" fill="#123a4f" opacity=".75"/>
@@ -1733,7 +1776,8 @@ function mapBaseSVG(){
       <path d="M40 360 L40 40 L360 40"/><path d="M40 360 L360 360 L360 40"/><path d="M50 350 L350 50"/></g>
     <circle cx="26" cy="374" r="34" fill="#0d3a5c" stroke="#0ac8b9" stroke-width="2"/>
     <circle cx="374" cy="26" r="34" fill="#4a1622" stroke="#e84057" stroke-width="2"/>
-    <circle cx="120" cy="120" r="9" fill="#7b5cc7"/><circle cx="280" cy="280" r="9" fill="#d9813b"/>`;
+    <circle cx="120" cy="120" r="9" fill="#7b5cc7"/><circle cx="280" cy="280" r="9" fill="#d9813b"/>
+    <text class="pit" x="120" y="146" text-anchor="middle">Barón</text><text class="pit" x="280" y="306" text-anchor="middle">Dragón</text>`;
 }
 // Posición de cada estructura sobre el camino de su línea (0 = base propia, 1 = base rival)
 const TOWER_F=[.36,.24,.13], INHIB_F=.065;
@@ -1755,6 +1799,7 @@ function drawStructs(){
 function tokSVG(c,side,i){
   const col=side==="mine"?"#0ac8b9":"#e84057";
   return `<g class="tok" id="tk-${side}-${i}">
+    <circle class="halo" r="20"/>
     <circle r="15" fill="#08121f"/>
     <clipPath id="tc-${side}-${i}"><circle r="13"/></clipPath>
     <text y="4" text-anchor="middle" style="font:700 10px Cinzel,serif;fill:#f0e6d2">${initials(c.name)}</text>
@@ -1762,10 +1807,27 @@ function tokSVG(c,side,i){
     <circle r="14.5" fill="none" stroke="${col}" stroke-width="2.5"/>
   </g>`;
 }
-function moveTo(s,i,[x,y]){ const el=document.getElementById(`tk-${s}-${i}`); if(el) el.style.transform=`translate(${x}px,${y}px)`; }
+function moveTo(s,i,[x,y]){
+  const M=sim.match; if(M){ M.pos=M.pos||{mine:[],enemy:[]}; M.pos[s][i]=[x,y]; }
+  const el=document.getElementById(`tk-${s}-${i}`); if(el) el.style.transform=`translate(${x}px,${y}px)`;
+}
 function groupTo(s,[x,y]){ for(let i=0;i<5;i++) if(alive(s,i)) moveTo(s,i,[x+Math.cos(i*1.26)*17,y+Math.sin(i*1.26)*17]); }
+// Posición de un jugador de línea justo detrás de su oleada
+function lanerPt(s,i){
+  const L=LANE_OF[i], f=frontF(sim.match.lanes[L].p)+(s==="mine"?-1:1)*(i===4?.03:.05);
+  const [x,y]=along(PATHS[L],f), k=i===4?7:0;
+  return [x+k,y-k];
+}
+function drawWaves(){
+  const g=document.getElementById("waves"), M=sim.match; if(!g) return;
+  g.innerHTML=["top","mid","bot"].map(L=>{
+    const p=M.lanes[L].p, cls=p>.15?"mine":p<-.15?"enemy":"even", f=frontF(p);
+    return [-.018,0,.018].map(d=>{ const [x,y]=along(PATHS[L],f+d); return `<circle class="wave ${cls}" cx="${x}" cy="${y}" r="3"/>`; }).join("");
+  }).join("");
+}
 function layout(){
   const M=sim.match;
+  drawWaves();
   if(Math.random()<.35) M.jg.mine=rnd(JG_SPOTS);
   if(Math.random()<.35){ const p=rnd(JG_SPOTS); M.jg.enemy=[400-p[1],400-p[0]]; }
   ["mine","enemy"].forEach(s=>{
@@ -1775,11 +1837,38 @@ function layout(){
       let pt;
       if(c.dead) pt=[BASE[s][0]+(i-2)*7,BASE[s][1]+((i%2)?6:-6)];
       else if(i===1) pt=M.jg[s];
-      else { const L=LANE_OF[i]; pt=along(PATHS[L],.5+.3*M.lanes[L].p+(s==="mine"?-1:1)*(i===4?.025:.045)); }
+      else pt=lanerPt(s,i);
       moveTo(s,i,[pt[0]+(Math.random()-.5)*8,pt[1]+(Math.random()-.5)*8]);
     }
   });
 }
+/* ---------- Foco de la decisión ----------
+   Mientras la carta está abierta el mapa muestra lo mismo que dice el texto:
+   quién está dónde, qué línea está empujada y qué objetivo está en juego. */
+const posOf=(s,i)=>sim.match.pos?.[s]?.[i]||BASE[s];
+const svgTxt=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function mark([x,y],label,side){
+  const g=document.getElementById("focus"); if(!g) return;
+  const hw=String(label).length*3.3+4, lx=clamp(x,hw,400-hw), ly=y<60?y+38:y-28;
+  g.insertAdjacentHTML("beforeend",`<g class="fmark ${side||""}"><circle class="fring" cx="${x}" cy="${y}" r="24"/>
+    <text x="${lx}" y="${ly}" text-anchor="middle">${svgTxt(label)}</text></g>`);
+}
+function arrow(a,b,side){
+  const g=document.getElementById("focus"); if(!g||!a||!b) return;
+  const d=Math.hypot(b[0]-a[0],b[1]-a[1])||1, r=20, ux=(b[0]-a[0])/d, uy=(b[1]-a[1])/d;
+  g.insertAdjacentHTML("afterbegin",`<line class="farrow ${side||""}" x1="${a[0]+ux*r}" y1="${a[1]+uy*r}" x2="${b[0]-ux*r}" y2="${b[1]-uy*r}" marker-end="url(#arrowhead)"/>`);
+}
+function hl(s,i){ const el=document.getElementById(`tk-${s}-${i}`); if(el) el.classList.add("focus"); }
+function clearFocus(){
+  const g=document.getElementById("focus"); if(g) g.innerHTML="";
+  document.querySelectorAll(".tok.focus").forEach(e=>e.classList.remove("focus"));
+}
+// Ubica a los jugadores de una línea frente a su oleada (sin el desorden del tick)
+function stageLane(L){ ["mine","enemy"].forEach(s=>LANES[L].forEach(i=>{ if(alive(s,i)) moveTo(s,i,lanerPt(s,i)); })); }
+// Un punto de la jungla al costado de una línea, hacia el centro del mapa
+function jgNear(L){ const [x,y]=clashPt(L); return [x+(200-x)*.32,y+(200-y)*.32]; }
+const laneLabel=p=>p>.5?"dominando":p>.15?"con ventaja":p>-.15?"pareja":p>-.5?"en desventaja":"bajo tu torre";
+
 function ping([x,y],ok){
   const g=document.getElementById("pings"); if(!g) return;
   g.insertAdjacentHTML("beforeend",`<circle class="ping ${ok?"ok":"bad"}" cx="${x}" cy="${y}" r="10"/>`);
@@ -1853,8 +1942,8 @@ function playRound(){
   const area=document.getElementById("matchArea");
   area.innerHTML=`<div class="match">
     <div>
-      <div class="match-map"><svg id="mmap" viewBox="0 0 400 400" aria-label="Partida en curso">${mapBaseSVG()}<g id="structs"></g>
-        ${M.team.map((c,i)=>tokSVG(c,"mine",i)).join("")}${sim.enemy.team.map((c,i)=>tokSVG(c,"enemy",i)).join("")}<g id="pings"></g></svg></div>
+      <div class="match-map"><svg id="mmap" viewBox="0 0 400 400" aria-label="Partida en curso">${mapBaseSVG()}<g id="structs"></g><g id="waves"></g>
+        ${M.team.map((c,i)=>tokSVG(c,"mine",i)).join("")}${sim.enemy.team.map((c,i)=>tokSVG(c,"enemy",i)).join("")}<g id="focus"></g><g id="pings"></g></svg></div>
       <div class="sb" id="sb">${sbHTML()}</div>
     </div>
     <div class="match-side">
@@ -1955,6 +2044,7 @@ function triggerEvent(){
   M.lastEv=ev.id; M.evCount[ev.id]=(M.evCount[ev.id]||0)+1;
   const data=M.ev=ev.make(M);
   M.paused=true;
+  drawWaves(); clearFocus(); if(data.show) data.show();
   const card=document.getElementById("eventCard");
   card.innerHTML=`<div class="event"><div class="ev-head"><b>${data.title}</b><span class="ev-n">Decisión ${M.evDone+1} de ${M.evMax}</span><div class="timer" title="Si no elegís a tiempo, el rival toma la iniciativa"><i></i></div></div>
     <p class="ev-ctx">${data.ctx}</p>
@@ -1968,7 +2058,7 @@ function choose(opt){
   const M=sim.match; clearTimeout(M.timer);
   const card=document.getElementById("eventCard");
   card.querySelectorAll(".ev-opt").forEach(b=>b.disabled=true);
-  const resume=()=>{ if(M.over) return; card.innerHTML=""; M.nextEv=M.t+M.evGap+Math.floor(Math.random()*2); M.paused=false; };
+  const resume=()=>{ if(M.over) return; card.innerHTML=""; clearFocus(); M.nextEv=M.t+M.evGap+Math.floor(Math.random()*2); M.paused=false; };
   M.evDone++; M.ev=null;
   if(!opt){
     M.edge-=M.step*1.2; M.gold-=300; push(rnd(["top","mid","bot"]),-.2);
@@ -2005,7 +2095,7 @@ function finalFight(){
 
 function endGame(win,how){
   const M=sim.match; if(M.over) return;
-  M.over=true; M.paused=true; clearInterval(M.loop); clearTimeout(M.timer);
+  M.over=true; M.paused=true; clearInterval(M.loop); clearTimeout(M.timer); clearFocus();
   if(how!=="backdoor") logLine(win?"Tu equipo rompe el nexo rival.":"El rival rompe tu nexo.",win);
   sim.history.push({round:sim.round,win,my:M.team.map(c=>({...c})),me:M.myScore,en:sim.enemy.score});
   setTimeout(()=>{ sim.playing=false; showOverlay(win,M.myScore,sim.enemy.score); },reduceMotion()?400:1500);
