@@ -84,9 +84,9 @@ let state, spinning=false;
 const reduceMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function newGame(){
-  state={slots:ROLES.map(()=>({champ:null,locked:false})),banned:[],rerolls:MAX_REROLLS};
-  document.getElementById("results").className="frame";
-  const tSim=document.getElementById("tabSim"); tSim.disabled=true; tSim.title="Fijá las cinco líneas para habilitarla";
+  state={slots:ROLES.map(()=>({champ:null,locked:false})),banned:[],rerolls:MAX_REROLLS,builds:null,confirmed:false};
+  const res=document.getElementById("results"); res.className="frame"; res.innerHTML="";
+  if(!sim||sim.src==="roller"){ sim=null; const tSim=document.getElementById("tabSim"); tSim.disabled=true; tSim.title="Confirmá un equipo en Roller o Picker para habilitarla"; }
   ROLES.forEach((_,i)=>roll(i));
   render(true);
   spin(ROLES.map((_,i)=>i));
@@ -122,8 +122,32 @@ function act(i){
   if(spinning||s.locked) return;
   s.locked=true;
   render();
-  if(allLocked()) evaluate();
+  if(allLocked()){ state.builds=defaultBuilds(state.slots.map(x=>x.champ)); runeStep(); }
 }
+
+/* ---------- Paso final del roller: runas y hechizos ----------
+   Cada campeón llega con la página recomendada. Se puede cambiar libremente hasta
+   confirmar el equipo; después quedan fijas para toda la simulación. */
+function runeStep(){
+  const team=state.slots.map(x=>x.champ), el=document.getElementById("results");
+  const bm=buildMod(team,state.builds), ctx=buildContext(team);
+  el.innerHTML=`<h2 class="section-title">Paso final: runas y hechizos</h2>
+    <p class="hint">Cada campeón viene con la página recomendada para su arquetipo y su línea. Podés ajustarla ahora: <b>cuando confirmes el equipo las runas quedan fijas</b> para todas las rondas.</p>
+    <div class="rstep-grid">${team.map((c,i)=>`<div class="rcard"><div class="top">${faceHTML(c)}<div><b>${c.name}</b><small>${LANE_NAME[LANE_CODE[i]]}</small></div></div>
+      ${buildChip(c,i,state.builds[i],ctx)}
+      <button class="btn" onclick="editRollerRunes(${i})">Editar runas</button></div>`).join("")}</div>
+    <p class="bmod">Efecto de las runas en la composición: ${bmTxt(bm.mod)}</p>
+    <div class="sim-actions"><button class="btn-big primary" onclick="confirmTeam()">Confirmar equipo</button></div>`;
+  el.className="frame show";
+  el.scrollIntoView({behavior:reduceMotion()?"auto":"smooth",block:"start"});
+}
+const bmTxt=m=>`<b class="${m>0?"up":m<0?"down":""}">${m>0?"+":""}${m.toFixed(1)} puntos</b>`;
+function editRollerRunes(i){
+  const team=state.slots.map(x=>x.champ);
+  openRunes({team,builds:state.builds,i,readonly:state.confirmed,
+    lockMsg:"En el modo Roller las runas se fijan al confirmar el equipo.",onSave:runeStep});
+}
+function confirmTeam(){ state.confirmed=true; evaluate(); }
 
 /* ---------- Spin animation ---------- */
 function setFace(i,c){
@@ -309,6 +333,7 @@ const PAIRS=[
   ["Caitlyn","Lux",3,"Caitlyn y Lux asedian la línea desde un rango que el rival no alcanza."],
 ];
 
+const verdictOf=score=>score>=85?"Comp de Worlds":score>=70?"Muy jugable":score>=55?"Funciona con ejecución":score>=40?"Cuesta arriba":"Rezale al rival";
 function analyze(team,mine=true){
   const names=new Set(team.map(c=>c.name));
   const good=[],bad=[],parts=[];
@@ -432,7 +457,7 @@ function analyze(team,mine=true){
              ["Pick y caza",A>=2?A+G:0],["Split push 1-3-1",S>=2?S+G:0]].sort((a,b)=>b[1]-a[1]);
   const identity=ids[0][1]>0?ids[0][0]:"Escaramuza";
   const score=Math.round(clamp(parts.reduce((a,p)=>a+p[1],0),1,100));
-  const verdict=score>=85?"Comp de Worlds":score>=70?"Muy jugable":score>=55?"Funciona con ejecución":score>=40?"Cuesta arriba":"Rezale al rival";
+  const verdict=verdictOf(score);
   const phaseName=[["early",pe],["mid",pm],["late",pl]].sort((a,b)=>b[1]-a[1])[0][0];
   const plan={early:"forzar dragones y heraldo temprano y cerrar antes del minuto 25",
               mid:"agruparse en mid game y pelear cada objetivo neutral",
@@ -452,12 +477,58 @@ function faceHTML(c){
 
 function evaluate(){
   const team=state.slots.map(s=>s.champ);
-  renderResults(analyze(team),team);
+  renderResults(analyze(team),team,{target:"results",builds:state.builds,simCall:"startSim('roller')",
+    onRunes:i=>`editRollerRunes(${i})`});
   const t=document.getElementById("tabSim"); t.disabled=false; t.title="";
 }
 
-function renderResults(r,team){
-  const el=document.getElementById("results");
+/* ---------- Counters ----------
+   A partir de las debilidades de la comp se arma qué tipo de rival la castiga
+   y, para cada línea, los campeones que mejor explotan esas debilidades. */
+function counterThreats(team,r){
+  const n=f=>count(team,f), tankSum=team.reduce((a,c)=>a+c.tank,0), ccSum=team.reduce((a,c)=>a+c.cc,0);
+  const apShare=r.ap/((r.ad+r.ap)||1), T=[];
+  if(ccSum<6) T.push({why:"Poco control: asesinos y duelistas entran y salen sin castigo.",w:c=>has(c,"A")?1:has(c,"S")?.7:0});
+  if(tankSum<4) T.push({why:"Frontline finita: el poke y el daño en área los desarman antes de pelear.",w:c=>has(c,"K")?1:has(c,"F")?.8:0});
+  if(r.pe<=8) T.push({why:"Early débil: líneas agresivas y una jungla de presión los ahogan antes de escalar.",w:c=>c.e>=3?(has(c,"A")||has(c,"E")?1:.6):0});
+  if(r.pl<=9) T.push({why:"Se caen en late: un hipercarry rival que llegue con ítems los supera.",w:c=>has(c,"Y")?1:c.l>=3?.5:0});
+  if(apShare<.3) T.push({why:"Casi todo el daño es AD: un tanque con armadura les apaga la comp.",w:c=>c.tank>=3?1:0});
+  if(apShare>.7) T.push({why:"Casi todo el daño es AP: con resistencia mágica temprana el rival aguanta todo.",w:c=>c.tank>=3?.8:0});
+  if(n("Y")&&!n("H")&&!n("P")) T.push({why:"Hipercarry sin protección: dive y asesinos lo borran en cada pelea.",w:c=>has(c,"A")?1:has(c,"E")?.7:0});
+  if(n("K")>=3) T.push({why:"Comp de poke: el engage duro les cae encima antes de que puedan ablandar.",w:c=>has(c,"E")&&c.tank>=2?1:has(c,"E")?.5:0});
+  if(n("E")&&n("F")>=3) T.push({why:"Wombo combo: el desenganche y el split push la dejan sin pelea que forzar.",w:c=>has(c,"P")||has(c,"H")?1:has(c,"S")?.8:0});
+  if(!n("E")) T.push({why:"Nadie inicia: un rival de poke y asedio los castiga sin tener que entrar.",w:c=>has(c,"K")?1:has(c,"G")?.4:0});
+  if(n("S")>=2) T.push({why:"Les gusta separarse: un engage de cinco los agarra divididos.",w:c=>has(c,"E")&&has(c,"F")?1:has(c,"E")?.6:0});
+  if(n("A")>=2&&tankSum<5) T.push({why:"Dependen de pickear: tanques y protectores les cortan la ráfaga.",w:c=>c.tank>=3||has(c,"P")?1:0});
+  return T;
+}
+function counterPicks(team,r){
+  const T=counterThreats(team,r), names=new Set(team.map(c=>c.name));
+  const picks=ROLES.map((_,i)=>CHAMPS.filter(c=>!names.has(c.name)&&baseAff(c,i)===1)
+    .map(c=>{ const hits=T.filter(t=>t.w(c)>0); return {c,score:T.reduce((a,t)=>a+t.w(c),0)+(c.wr-50)*.15,hits}; })
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3));
+  return {T,picks};
+}
+function countersHTML(team,r){
+  const {T,picks}=counterPicks(team,r);
+  if(!T.length) return `<div class="counters"><h3 class="section-title">Posibles counters</h3><p class="hint">No tiene una debilidad marcada: la castiga cualquier rival que juegue mejor la ejecución.</p></div>`;
+  const short=t=>t.why.split(":")[0];
+  return `<div class="counters"><h3 class="section-title">Posibles counters</h3>
+    <ul class="threats">${T.map(t=>`<li>${t.why}</li>`).join("")}</ul>
+    <div class="cpicks">${ROLES.map((ro,i)=>`<div><h4>${ro.name}</h4>${picks[i].length?picks[i].map(p=>`<div class="cpick">${faceHTML(p.c)}<div><b>${p.c.name}</b><small>${p.hits.map(short).join(" · ")}</small></div></div>`).join(""):`<small class="hint">Sin un counter claro.</small>`}</div>`).join("")}</div></div>`;
+}
+function trendHTML(team){
+  const rows=team.filter(c=>PATCH_LOG[c.name]).map(c=>PATCH_LOG[c.name].map(e=>({c,...e}))).flat();
+  if(!rows.length) return "";
+  const lbl={buff:"buff",nerf:"nerf",adj:"ajuste"};
+  return `<h3 class="section-title" style="margin-top:22px">Cambios recientes (${PATCHES[0].v}–${PATCH_NOW})</h3>
+    <ul class="trend">${rows.map(x=>`<li class="${x.k}">${x.c.name}: ${lbl[x.k]} ${x.v}</li>`).join("")}</ul>`;
+}
+function renderResults(r,team,opts={}){
+  const el=document.getElementById(opts.target||"results");
+  const bm=buildMod(team,opts.builds), ctx=buildContext(team);
+  const baseScore=r.score, withRunes=Math.round(clamp(r.score+bm.mod,1,100));
+  r={...r,score:withRunes,verdict:verdictOf(withRunes)};
   const total=(r.ad+r.ap)||1, adPct=Math.round(r.ad/total*100), apPct=100-adPct;
   const hex=(cx,cy,rad)=>Array.from({length:6},(_,k)=>{const a=Math.PI/3*k-Math.PI/2;return `${cx+rad*Math.cos(a)},${cy+rad*Math.sin(a)}`}).join(" ");
   el.innerHTML=`
@@ -474,7 +545,8 @@ function renderResults(r,team){
         <div class="identity">${r.identity}</div>
         <div class="strip">${team.map(faceHTML).join("")}</div>
         <p class="explain">${r.explain}</p>
-        <button class="btn-big primary" style="margin-top:16px" onclick="startSim()">Llevar a simulación</button>
+        ${opts.builds?`<p class="bmod" style="margin-top:10px">Composición ${baseScore} ${bm.mod>=0?"+":"−"} runas ${Math.abs(bm.mod).toFixed(1)}</p>`:""}
+        <button class="btn-big primary" style="margin-top:16px" onclick="${opts.simCall||"startSim('roller')"}">Llevar a simulación</button>
       </div>
     </div>
     <div class="res-grid">
@@ -501,9 +573,57 @@ function renderResults(r,team){
       <div class="good"><h3 class="section-title">Por qué funciona</h3><ul>${(r.good.length?r.good:["Nada destaca demasiado: es una comp sin puntos fuertes claros."]).map(t=>`<li>${t}</li>`).join("")}</ul></div>
       <div class="bad"><h3 class="section-title">Por qué puede fallar</h3><ul>${(r.bad.length?r.bad:["No hay agujeros evidentes: si pierden, es por ejecución."]).map(t=>`<li>${t}</li>`).join("")}</ul></div>
     </div>
-    <p class="disclaimer">El WR de referencia es un valor aproximado cargado a mano; para estadísticas reales conectá una fuente de datos por parche.</p>`;
+    ${opts.builds?`<h3 class="section-title" style="margin-top:24px">Runas y hechizos</h3>
+      <div class="rstep-grid">${team.map((c,i)=>`<div class="rcard"><div class="top">${faceHTML(c)}<div><b>${c.name}</b><small>${LANE_NAME[LANE_CODE[i]]}</small></div></div>
+        ${buildChip(c,i,opts.builds[i],ctx)}
+        ${opts.onRunes?`<button class="btn" onclick="${opts.onRunes(i)}">${opts.runesEditable?"Editar runas":"Ver runas"}</button>`:""}</div>`).join("")}</div>
+      ${bm.notes.length?`<ul class="rune-notes">${bm.notes.map(n=>`<li class="${n.bad?"bad":"good"}">${n.t}</li>`).join("")}</ul>`:""}`:""}
+    ${countersHTML(team,r)}
+    ${trendHTML(team)}
+    <p class="disclaimer">El WR de referencia es un valor aproximado ajustado con los cambios de los parches ${PATCHES[0].v} a ${PATCH_NOW}. Las páginas recomendadas salen del arquetipo de cada campeón y de su línea, no de estadísticas en vivo.</p>`;
   el.className="frame show";
-  el.scrollIntoView({behavior:reduceMotion()?"auto":"smooth",block:"start"});
+  if(!opts.noScroll) el.scrollIntoView({behavior:reduceMotion()?"auto":"smooth",block:"start"});
+}
+
+/* =========================================================
+   LEAGUE PICKER
+   Composición armada a mano. Las runas se pueden editar siempre.
+   ========================================================= */
+let picker=null;
+function newPicker(){ picker={slots:[null,null,null,null,null],builds:[null,null,null,null,null]}; renderPicker(); }
+const findChamp=v=>{ const q=v.trim().toLowerCase(); return CHAMPS.find(c=>c.name.toLowerCase()===q); };
+function pickerSet(i,val){
+  const err=document.getElementById("pickerErr"); err.textContent="";
+  if(!val.trim()){ picker.slots[i]=null; picker.builds[i]=null; return renderPicker(); }
+  const c=findChamp(val);
+  if(!c){ err.textContent=`No encontré a "${val}". Elegí un nombre de la lista.`; return renderPicker(); }
+  const j=picker.slots.findIndex((x,k)=>x&&k!==i&&x.name===c.name);
+  if(j>=0){ err.textContent=`${c.name} ya está en ${ROLES[j].name}.`; return renderPicker(); }
+  const wasFull=picker.slots.every(Boolean);
+  picker.slots[i]=c; picker.builds[i]={champ:c.name,...recommended(c,i)};
+  renderPicker(!wasFull&&picker.slots.every(Boolean));
+}
+function pickerRunes(i){
+  openRunes({team:picker.slots,builds:picker.builds,i,readonly:false,onSave:()=>renderPicker(false)});
+}
+function renderPicker(scroll){
+  const full=picker.slots.every(Boolean), team=picker.slots, ctx=full?buildContext(team):null;
+  document.getElementById("pickerRows").innerHTML=ROLES.map((ro,i)=>{
+    const c=team[i];
+    const opts=CHAMPS.slice().sort((a,b)=>baseAff(b,i)-baseAff(a,i)||a.name.localeCompare(b.name))
+      .map(x=>`<option value="${x.name.replace(/"/g,"&quot;")}">${baseAff(x,i)===1?"Línea principal":baseAff(x,i)>0?"Línea secundaria":"Fuera de línea"}</option>`).join("");
+    return `<div class="prow"><span class="role">${ro.name}</span>
+      <input list="pl-${i}" id="pin-${i}" value="${c?c.name.replace(/"/g,"&quot;"):""}" placeholder="Buscar campeón…" aria-label="Campeón para ${ro.name}" onchange="pickerSet(${i},this.value)">
+      <datalist id="pl-${i}">${opts}</datalist>
+      ${c?faceHTML(c):`<span class="face"></span>`}
+      <div class="pextra">${c?`${affChip(c,i)}${buildChip(c,i,picker.builds[i],ctx)}
+        <button class="btn" onclick="pickerRunes(${i})">Runas</button><button class="btn" onclick="pickerSet(${i},'')">Quitar</button>`
+        :`<span class="empty">Sin elegir</span>`}</div></div>`;
+  }).join("");
+  const res=document.getElementById("pickerResults");
+  if(!full){ res.className="frame"; res.innerHTML=`<p class="hint">Faltan ${picker.slots.filter(x=>!x).length} campeones para ver el análisis.</p>`; return; }
+  renderResults(analyze(team),team,{target:"pickerResults",builds:picker.builds,simCall:"startSim('picker')",
+    onRunes:i=>`pickerRunes(${i})`,runesEditable:true,noScroll:!scroll});
 }
 
 /* =========================================================
@@ -544,11 +664,24 @@ function genEnemy(mn,mx,exclude){
   return best;
 }
 
-function startSim(){
-  if(!state||!allLocked()) return;
-  sim={round:0,my:state.slots.map(s=>s.champ),history:[],done:false};
+// src "roller": runas fijas. src "picker": runas editables entre rondas.
+function startSim(src="roller"){
+  let my,builds;
+  if(src==="picker"){ if(!picker||picker.slots.some(c=>!c)) return; my=picker.slots.slice(); builds=picker.builds.map(cloneBuild); }
+  else { if(!state||!allLocked()||!state.confirmed) return; my=state.slots.map(s=>s.champ); builds=state.builds.map(cloneBuild); }
+  sim={round:0,my,builds,src,history:[],done:false};
+  const t=document.getElementById("tabSim"); t.disabled=false; t.title="";
   setupRound();
   showView("sim");
+}
+// Puntaje de tu equipo con el efecto de las runas contra el rival actual
+const simBuildMod=()=>buildMod(sim.my,sim.builds,sim.enemy&&sim.enemy.team).mod;
+const simScore=()=>Math.round(clamp(analyze(sim.my).score+simBuildMod(),1,100));
+function simRunes(i){
+  const locked=sim.src==="roller"||sim.playing;
+  openRunes({team:sim.my,builds:sim.builds,i,enemy:sim.enemy.team,readonly:locked,
+    lockMsg:sim.playing?"Durante la partida no se pueden cambiar las runas.":"En el modo Roller las runas quedaron fijas al confirmar el equipo.",
+    onSave:renderSim});
 }
 function setupRound(){
   const [mn,mx]=RANGES[sim.round];
@@ -561,7 +694,7 @@ function simSwap(i){
   if(!sim.swap||sim.playing) return;
   const used=new Set([...sim.my.map(c=>c.name),...sim.enemy.team.map(c=>c.name)]);
   const cands=CHAMPS.filter(x=>!used.has(x.name)&&baseAff(x,i)===1);
-  sim.my[i]=rnd(cands); sim.used=true; sim.swap=false; sim.fresh=i; sim.enemyFresh=false;
+  sim.my[i]=rnd(cands); sim.builds=syncBuilds(sim.my,sim.builds); sim.used=true; sim.swap=false; sim.fresh=i; sim.enemyFresh=false;
   renderSim();
 }
 function simRerollEnemy(){
@@ -576,11 +709,12 @@ function teamRows(team,mine){
   return team.map((c,i)=>{
     const tag=mine?"button":"div";
     const fresh=(mine&&sim.fresh===i)||(!mine&&sim.enemyFresh);
-    return `<${tag} class="trow ${fresh?"new":""}" ${mine?`onclick="simSwap(${i})" ${sim.swap?"":"tabindex='-1'"}`:""}>
+    const row=`<${tag} class="trow ${fresh?"new":""}" ${mine?`onclick="simSwap(${i})" ${sim.swap?"":"tabindex='-1'"}`:""}>
       ${faceHTML(c)}
-      <span class="who"><strong>${c.name}</strong><small>${LANE_NAME[LANE_CODE[i]]}</small></span>
+      <span class="who"><strong>${c.name}</strong><small>${LANE_NAME[LANE_CODE[i]]}${mine&&sim.builds?` · ${sim.builds[i].key}`:""}</small></span>
       ${affChip(c,i,mine)}
     </${tag}>`;
+    return mine&&sim.builds?`<div class="trow-wrap">${row}<button class="rbtn" onclick="simRunes(${i})" title="${sim.src==="picker"?"Editar runas":"Ver runas"}">Runas</button></div>`:row;
   }).join("");
 }
 
@@ -610,20 +744,20 @@ function renderSim(){
             <td>${Math.round(e.before*100)}% a <b>${Math.round(e.after*100)}%</b> <span class="${d>0?"up":d<0?"down":""}">${d>0?"▲ +"+d:d<0?"▼ "+d:"="}</span></td></tr>`;
         }).join("")}</tbody></table></div>
       <div class="sim-actions">
-        <button class="btn-big primary" onclick="startSim()">Jugar otra vez con este equipo</button>
+        <button class="btn-big primary" onclick="startSim('${sim.src}')">Jugar otra vez con este equipo</button>
         <button class="btn-big" onclick="showView('draft')">Volver al draft</button>
       </div></section>`;
     return;
   }
 
-  const me=analyze(sim.my), en=sim.enemy.score;
-  const p=Math.round(100/(1+Math.exp(-(me.score-en)/9)));
+  const me={score:simScore()}, en=sim.enemy.score, bmod=simBuildMod();
+  const p=Math.round(100/(1+Math.exp(-(me.score-en)/10)));
   const locked=!sim.round;
   v.innerHTML=`<section class="frame sim ${sim.swap?"swap-mode":""}">
     <div class="rounds">${pips}</div>
     <div class="versus">
       <div class="team mine"><h3><span>Tu equipo</span><big>${me.score}</big></h3>${teamRows(sim.my,true)}</div>
-      <div class="vs">VS<small>Chances de ganar: ${p}%</small><small>Decisiones en la partida: ${matchPlan(me.score,en).evMax}</small></div>
+      <div class="vs">VS<small>Chances de ganar: ${p}%</small><small>Runas: ${bmod>0?"+":""}${bmod.toFixed(1)} ${sim.src==="picker"?"(editables)":"(fijas)"}</small><small>Decisiones en la partida: ${matchPlan(me.score,en).evMax}</small></div>
       <div class="team enemy"><h3><span>Rival</span><big>${en}</big></h3>${teamRows(sim.enemy.team,false)}</div>
     </div>
     <div class="sim-actions">
@@ -980,9 +1114,9 @@ const EVENTS=[
       {label:`Pasar a ${c.name} a full ${to}`,desc:"Vender y rearmar con el otro tipo de daño.",
        p:sig(delta*.4+.1),
        at:()=>M.pos?.mine?.[i]||null,
-       ok:()=>{ M.team[i]={...M.team[i],dmg:to}; M.built=true; M.myScore=analyze(M.team).score;
+       ok:()=>{ M.team[i]={...M.team[i],dmg:to}; M.built=true; M.myScore=rescore(M);
                 return `Con la build ${to}, ${c.name} obliga al rival a repartir resistencias.`; },
-       fail:()=>{ M.team[i]={...M.team[i],dmg:to}; M.built=true; M.myScore=analyze(M.team).score; M.gold-=400;
+       fail:()=>{ M.team[i]={...M.team[i],dmg:to}; M.built=true; M.myScore=rescore(M); M.gold-=400;
                 return `El cambio a ${to} le cuesta oro a ${c.name} y no pega como esperaban.`; }},
       {label:"Mantener la build",desc:"No tocar nada y apostar a lo que ya funciona.",
        p:sig(-delta*.4+.2),
@@ -1198,6 +1332,7 @@ function hud(){
     $(`kd-${s}-${i}`).textContent=c.afk?"AFK":`${c.k}/${c.d}`;
   }));
 }
+const rescore=M=>Math.round(clamp(analyze(M.team).score+(M.buildMod||0),1,100));
 function swapLanes(a,b){
   const M=sim.match;
   [M.team[a],M.team[b]]=[M.team[b],M.team[a]];
@@ -1205,7 +1340,7 @@ function swapLanes(a,b){
   const ea=document.getElementById(`tk-mine-${a}`), eb=document.getElementById(`tk-mine-${b}`);
   ea.id=`tk-mine-${b}`; eb.id=`tk-mine-${a}`;
   document.getElementById("sb").innerHTML=sbHTML();
-  M.myScore=analyze(M.team).score; M.swapped=true;
+  M.myScore=rescore(M); M.swapped=true;
 }
 
 /* ---------- Eventos espontáneos ----------
@@ -1283,7 +1418,7 @@ function playRound(){
     dr:{mine:0,enemy:0},soul:null,elder:null,carry:null,rand:rollRandomEvents(),kills:{mine:0,enemy:0},edge:0,evDone:0,nextFinal:0,
     baron:null,drakeT:5,baronT:20,evCount:{},lastEv:null,
     jg:{mine:JG_SPOTS[0],enemy:[400-JG_SPOTS[0][1],400-JG_SPOTS[0][0]]},recentWin:null,recentLoss:null,built:false,swapped:false};
-  M.myScore=analyze(M.team).score;
+  M.buildMod=simBuildMod(); M.myScore=rescore(M);
   Object.assign(M,matchPlan(M.myScore,sim.enemy.score));
   M.nextEv=2+Math.floor(Math.random()*2);
   const area=document.getElementById("matchArea");
@@ -1495,6 +1630,8 @@ function finishSim(){
 
 function showView(v){
   document.getElementById("draftView").hidden=v!=="draft";
+  document.getElementById("pickerView").hidden=v!=="picker";
+  document.getElementById("tabPicker").setAttribute("aria-selected",v==="picker");
   document.getElementById("simView").hidden=v!=="sim";
   document.getElementById("tabDraft").setAttribute("aria-selected",v==="draft");
   document.getElementById("tabSim").setAttribute("aria-selected",v==="sim");
@@ -1505,7 +1642,9 @@ if(typeof document!=="undefined"){
   document.getElementById("restart").addEventListener("click",()=>{ if(!spinning){ sim=null; newGame(); } });
   document.getElementById("rerollBtn").addEventListener("click",rerollAll);
   document.getElementById("tabDraft").addEventListener("click",()=>showView("draft"));
-  document.getElementById("tabSim").addEventListener("click",()=>{ if(!sim) startSim(); else showView("sim"); });
+  document.getElementById("tabSim").addEventListener("click",()=>{ if(!sim) startSim("roller"); else showView("sim"); });
+  document.getElementById("tabPicker").addEventListener("click",()=>{ if(!picker) newPicker(); showView("picker"); });
+  document.getElementById("patchV").textContent=PATCH_NOW;
   // No esperar más de 2,5 s al CDN: mientras tanto las imágenes salen de CommunityDragon
   Promise.race([initDD(),new Promise(r=>setTimeout(r,2500))]).finally(newGame);
 }

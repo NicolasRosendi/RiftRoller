@@ -16,10 +16,12 @@
 <header>
   <svg class="logo" viewBox="0 0 100 100" role="img" aria-label="Rift Roll"><defs><linearGradient id="lgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0e6d2"/><stop offset=".45" stop-color="#c8aa6e"/><stop offset="1" stop-color="#785a28"/></linearGradient><linearGradient id="lgR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8aa6e"/><stop offset="1" stop-color="#5b4520"/></linearGradient></defs><path d="M84 26 A40 40 0 1 1 30 18" fill="none" stroke="url(#lgR)" stroke-width="7" stroke-linecap="butt"/><path d="M16 10 H72 L84 22 V46 L72 58 H60 V70 H40 V50 L48 42 H62 V30 H40 V40 H24 V20 L16 14 Z" fill="url(#lgG)" stroke="#060d1a" stroke-width="3" paint-order="stroke" stroke-linejoin="miter"/><path d="M50 74 L60 84 L50 94 L40 84 Z" fill="url(#lgG)" stroke="#060d1a" stroke-width="3" paint-order="stroke"/></svg>
   <h1>Rift Roll</h1>
-  <p>Rolleá las cinco líneas, fijá tu equipo y mirá si la comp aguanta una partida.</p>
+  <p>Rolleá las cinco líneas o armá tu comp a mano, elegí runas y mirá si aguanta una partida.</p>
+  <p class="patch-tag">Datos al parche <b id="patchV"></b></p>
   <nav class="tabs" role="tablist">
-    <button class="tab" id="tabDraft" role="tab" aria-selected="true">Draft</button>
-    <button class="tab" id="tabSim" role="tab" aria-selected="false" disabled title="Fijá las cinco líneas para habilitarla">Simulación</button>
+    <button class="tab" id="tabDraft" role="tab" aria-selected="true">Roller</button>
+    <button class="tab" id="tabPicker" role="tab" aria-selected="false">Picker</button>
+    <button class="tab" id="tabSim" role="tab" aria-selected="false" disabled title="Confirmá un equipo en Roller o Picker para habilitarla">Simulación</button>
   </nav>
 </header>
 
@@ -48,12 +50,23 @@
 
   <section class="frame" id="results" aria-live="polite"></section>
 </div>
+<div id="pickerView" hidden>
+  <section class="frame">
+    <h2 class="section-title">League Picker</h2>
+    <p class="hint">Elegí un campeón para cada línea. Al completar las cinco aparece el análisis: fortalezas, debilidades, counters y la build. Acá las runas se pueden cambiar siempre, también entre rondas de la simulación.</p>
+    <div class="picker-rows" id="pickerRows"></div>
+    <div class="perr" id="pickerErr" aria-live="polite"></div>
+  </section>
+  <section class="frame" id="pickerResults" aria-live="polite"></section>
+</div>
 <div id="simView" hidden></div>
 </main>
 <div id="overlay" hidden role="dialog" aria-live="assertive"></div>
+<div id="runeModal" hidden></div>
 <footer class="legal">Rift Roll es un proyecto de fans sin fines de lucro y no está avalado ni respaldado por Riot Games. League of Legends, sus campeones y sus imágenes son propiedad de Riot Games, Inc.</footer>
 
 <script src="js/data.js"></script>
+<script src="js/builds.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
